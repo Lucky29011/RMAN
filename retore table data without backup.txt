@@ -1,0 +1,198 @@
+How to Recover Loss of DATA – (Without a Backup!)
+How to Recover Loss of DATA (Without a Backup!) using Oracle Flash Back Query 
+IT WILL WORK ONLY FOR DML DATA LOSS
+
+Issue Description:
+--------------------
+No Flashback Enable
+No Recyclebin
+No Restore Point
+No Backup
+
+Developer accidentally deleted all rows from table and then committed too. He want DBA to recover Loss of DATA
+
+Solution:
+
+It depends upon on how much undo retention time you have specified. If you have set the UNDO_RETENTION parameter to 1 hour, then users can recover from their mistakes made since last 1 hour only.
+
+Lets do Practical……………..
+
+Table of Contents
+___________________________________________________________________________________________________
+
+1. No Flashback Enable
+2. No Recyclebin
+3. No Restore Point and No Backup
+4. Archive Log Enabled
+5. Simulation
+6. Action Plan
+___________________________________________________________________________________________________
+
+
+1. No Flashback
+
+SQL> select name,open_mode from v$database;
+
+NAME      OPEN_MODE
+--------- --------------------
+DELL      READ WRITE
+
+SQL>
+
+SQL> select flashback_on from v$database;
+
+FLASHBACK_ON
+------------------
+NO  <-----------------------------
+
+SQL>
+
+2. No Recyclebin
+
+SQL> show parameter recyclebin
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+recyclebin                           string      OFF <------
+SQL>
+
+3. No Restore Point
+
+SQL> select * from v$restore_point;
+
+no rows selected <------
+
+SQL>
+
+4. Archive Log On
+
+SQL> select log_mode from v$database;
+
+LOG_MODE
+------------
+ARCHIVELOG <------
+
+SQL>
+
+5. Simulation
+
+SQL> conn test/test;
+Connected.
+SQL>
+SQL> CREATE TABLE SUGI (NAME    VARCHAR2(20),ROLE VARCHAR2(20));
+
+Table created.
+
+SQL> insert into sugi values ('SUGI','DBA');
+
+1 row created.
+
+SQL> insert into sugi values ('TEJU','DBA');
+
+1 row created.
+
+SQL> insert into sugi values ('RAJ','DBA');
+
+1 row created.
+
+SQL> COMMIT;
+
+Commit complete. <--------
+
+SQL> select * from sugi;
+
+NAME                 ROLE
+-------------------- --------------------
+SUGI                 DBA
+TEJU                 DBA
+RAJ                  DBA
+
+SQL>
+SQL> CONN / AS SYSDBA
+Connected.
+SQL> ALTER SYSTEM FLUSH BUFFER_CACHE;
+
+System altered.
+
+SQL> ALTER SYSTEM SWITCH LOGFILE;
+
+System altered.
+
+SQL> /
+
+System altered.
+
+SQL> /
+
+System altered.
+
+SQL> /
+
+System altered.
+
+SQL>
+
+SQL> conn test/test;
+Connected.
+SQL> select * from sugi;
+
+NAME                 ROLE
+-------------------- --------------------
+SUGI                 DBA
+TEJU                 DBA
+RAJ                  DBA
+
+SQL> select to_char(sysdate,'DD-MON-YYYY HH24:MI:SS') "SYSDATE" from dual;
+
+SYSDATE
+--------------------
+20-SEP-2018 08:39:43  <----------------- at this time Data available
+
+6. Delete the rows
+
+SQL> delete from sugi;  <-------
+
+3 rows deleted.
+
+SQL> commit;  <------
+
+Commit complete.
+
+SQL> select * from sugi;
+
+no rows selected <-----
+
+SQL>
+
+Action Plan:
+
+SQL> conn / as sysdba
+Connected.
+
+SQL> FLASHBACK TABLE TEST.SUGI to timestamp TO_TIMESTAMP('20-SEP-2018 08:39:00','DD-MON-YYYY HH24:MI:SS');
+FLASHBACK TABLE TEST.SUGI to timestamp TO_TIMESTAMP('20-SEP-2018 08:39:00','DD-MON-YYYY HH24:MI:SS')
+                     *
+ERROR at line 1:
+ORA-08189: cannot flashback the table because row movement is not enabled
+
+
+SQL> ALTER TABLE TEST.SUGI ENABLE ROW MOVEMENT;
+
+Table altered.
+
+SQL> FLASHBACK TABLE TEST.SUGI to timestamp TO_TIMESTAMP('20-SEP-2018 08:39:00','DD-MON-YYYY HH24:MI:SS');
+
+Flashback complete.  <----
+
+SQL> SELECT * FROM TEST.SUGI;
+
+NAME                 ROLE
+-------------------- --------------------
+SUGI                 DBA
+TEJU                 DBA
+RAJ                  DBA
+
+SQL>
+Caution: Your use of any information or materials on this website is entirely at your own risk. It is provided for educational purposes only. It has been tested internally, however, we do not guarantee that it will work for you. Ensure that you run it in your test environment before using.
+
+SOURCE:https://www.br8dba.com/how-to-recover-loss-of-data-without-a-backup/

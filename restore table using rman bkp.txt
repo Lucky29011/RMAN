@@ -1,0 +1,23 @@
+recovery table from rman backup
+================================
+1.create a table
+2.take the backup
+select SESSION_KEY, INPUT_TYPE, STATUS,
+to_char(START_TIME,'mm-dd-yyyy hh24:mi:ss') as RMAN_Bkup_start_time,
+to_char(END_TIME,'mm-dd-yyyy hh24:mi:ss') as RMAN_Bkup_end_time,
+elapsed_seconds/3600 Hours from V$RMAN_BACKUP_JOB_DETAILS
+order by session_key;  2    3    4    5  
+
+SESSION_KEY INPUT_TYPE	  STATUS		  RMAN_BKUP_START_TIM RMAN_BKUP_END_TIME       HOURS
+----------- ------------- ----------------------- ------------------- ------------------- -------
+	  2 	DB FULL	 		 COMPLETED		  08-02-2024 10:49:59 08-02-2024 10:50:09 .002777778
+
+3.drop the table
+4.connect to rman target /
+recover table gani.table1 until time "to_date('02-08-2024 11:00:25','dd-mm-yyyy hh24:mi:ss')" auxiliary destination '/u01/rman_bkp/test1_bkp/';
+5.once restore is completed check the table is restored or not.
+
+METHOD-2
+---------
+if table is available in RECYCLEIN
+flashback table table1 to before drop;

@@ -1,0 +1,35 @@
+PDB CLONNING IN SAME CDB
+=========================
+
+SQL> show con_name;
+
+CON_NAME
+------------------------------
+CDB$ROOT
+
+SQL> select name from v$database;
+
+NAME
+---------
+PRODDB
+
+SQL> show pdbs
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 PROD1                          READ WRITE NO
+
+create pluggable database PDB2 from PROD1@PRODDB keystore identified by 'oracle';
+
+SQL> show pdbs
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 PROD1                          READ WRITE NO
+         4 PDB2                           READ WRITE NO
+SQL>
+
+
+

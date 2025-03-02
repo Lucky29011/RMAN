@@ -1,0 +1,80 @@
+RMAN CLONING
+==============
+
+source side
+============
+DB NAME: TEST
+check no.of objects
+create pfile from spfile
+take full backup with archive log;
+
+
+copy pfile,password file,backup files to the target side.
+
+source side pfile
+------------------- 
+[oracle@server dbs]$ cat initTEST.ora
+TEST.__data_transfer_cache_size=0
+TEST.__db_cache_size=754974720
+TEST.__inmemory_ext_roarea=0
+TEST.__inmemory_ext_rwarea=0
+TEST.__java_pool_size=16777216
+TEST.__large_pool_size=16777216
+TEST.__oracle_base='/u01/app/oracle'#ORACLE_BASE set from environment
+TEST.__pga_aggregate_target=771751936
+TEST.__sga_target=1140850688
+TEST.__shared_io_pool_size=50331648
+TEST.__shared_pool_size=285212672
+TEST.__streams_pool_size=0
+TEST.__unified_pga_pool_size=0
+*.audit_file_dest='/u01/app/oracle/admin/TEST/adump'
+*.audit_trail='db'
+*.compatible='19.0.0'
+*.control_files='/u01/app/oracle/oradata/TEST/controlfile/o1_mf_mskpb7hd_.ctl','/u01/app/oracle/fast_recovery_area/TEST/controlfile/o1_mf_mskpb7j8_.ctl'
+*.db_block_size=8192
+*.db_create_file_dest='/u01/app/oracle/oradata'
+*.db_name='TEST'
+*.db_recovery_file_dest='/u01/app/oracle/fast_recovery_area'
+*.db_recovery_file_dest_size=8256m
+*.diagnostic_dest='/u01/app/oracle'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=TESTXDB)'
+*.memory_target=1811m
+*.open_cursors=300
+*.processes=300
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_tablespace='UNDOTBS1'
+[oracle@server dbs]$
+
+
+TARGET SIDE
+============
+change the pfile name,password file name.
+edit the pfile and create the mandatory directories.
+
+Target side edite pfile
+-------------------------- 
+[oracle@server2 dbs]$ cat initTEST.ora
+
+
+*.audit_file_dest='/u01/app/oracle/admin/TEST/adump'
+*.audit_trail='db'
+*.compatible='19.0.0'
+*.control_files='/u01/app/oracle/oradata/TEST/controlfile/control01.ctl','/u01/app/oracle/fast_recovery_area/TEST/controlfile/control01.ctl'
+*.db_block_size=8192
+*.db_create_file_dest='/u01/app/oracle/oradata'
+*.db_name='TEST'
+*.db_recovery_file_dest='/u01/app/oracle/fast_recovery_area'
+*.db_recovery_file_dest_size=8256m
+*.diagnostic_dest='/u01/app/oracle'
+*.dispatchers='(PROTOCOL=TCP) (SERVICE=TESTXDB)'
+*.memory_target=1811m
+*.open_cursors=300
+*.processes=300
+*.remote_login_passwordfile='EXCLUSIVE'
+*.undo_tablespace='UNDOTBS1'
+
+connect to the rman auxiliary /
+
+DUPLICATE DATABASE TO "TEST" BACKUP LOCATION '/u01/bkpfiles' NOFILENAMECHECK;
+
+check the db status and check the no.of objects

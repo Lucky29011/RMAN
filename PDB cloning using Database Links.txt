@@ -1,0 +1,67 @@
+PDB CLONING USING DATABASE LINKS
+---------------------------------
+
+source side
+============
+SQL> show pdbs
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 PROD1                          READ WRITE NO
+         4 PDB2                           READ WRITE NO
+         5 PDB3                           READ WRITE NO
+SQL> alter session set container=PROD1;
+Session altered.
+
+SQL> create user clone identified by clone account unlock;
+User created.
+
+SQL> grant create session,connect,resource,DBA to clone;
+Grant succeeded.
+
+SQL> alter user clone quota unlimited on users;
+User altered.
+
+SQL> grant create pluggable database to clone;
+Grant succeeded.
+
+SQL> alter pluggable database PROD1 close;
+Pluggable database altered.
+
+SQL> alter pluggable database PROD1 open read only;
+Pluggable database altered.
+
+SQL> show pdbs;
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         3 PROD1                          READ ONLY  NO
+
+Target Side
+===========
+SQL> show pdbs;
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 TEST1                          READ WRITE NO
+
+
+CREATE DATABASE LINK clone_db_link2
+CONNECT TO clone IDENTIFIED BY clone
+USING 'PROD1';
+
+CREATE PLUGGABLE DATABASE pdb_clone 
+FROM PROD1@clone_db_link2;
+
+SQL> show pdbs;
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 TEST1                          READ WRITE NO
+         4 PDB_CLONE                      MOUNTED
+
+
+
+
